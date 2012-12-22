@@ -7,8 +7,15 @@ import subprocess
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scikits.audiolab import wavread
+from scipy.io import wavfile
 from scipy import signal
+
+
+def wavread(fname):
+    fs, sig = wavfile.read(fname)
+    nsig = sig / 2 ** 15
+    enc = '?'
+    return nsig, fs, enc
 
 
 def extract_audio():
