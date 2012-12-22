@@ -47,7 +47,7 @@ isolate it, then did a fourier transform on this:
     ax.set_title('fft of a whistle')
     fig.savefig('whistle-fft.png')
 
-![whistle-fft]('whistle-fft.png')
+![whistle-fft](whistle-fft.png)
 
 So we can see a dominant frequency of about 2800Hz.
 
@@ -84,7 +84,7 @@ pass band from about 2700 - 2900 Hz
     fig.savefig('filtered-audio.png')
 
 
-![filtered]('filtered-audio.png')
+![filtered](filtered-audio.png)
 
 We can see the whistle at about 27s, but also a load of other peaks
 that have some of the same frequency content. These are actually me
