@@ -18,31 +18,29 @@ def wavread(fname):
     return nsig, fs, enc
 
 
-def extract_audio():
+def extract_audio(f):
     """Uses ffmpeg to strip audio from video as wav for two files
     called cam1.MOV and cam2.MOV.
+
+    Returns the name of the output file.
     """
+    o = f.split('.')[-2] + '.wav'
     tstart = str(0)
-    duration = str(30)
+    # duration = str(30)
 
-    cmd1 = ["ffmpeg", "-i", f1,     # input is f1
-            "-ss", tstart,          # start at tstart seconds
-            "-t", duration,         # for duration seconds
-            "-vn", "-ar", "44100",  # ignore video, audio rate is 44100
-            "-f", "wav",            # output format wav
-            o1]                     # output filename
-    cmd2 = ["ffmpeg", "-i", f2,
-            "-ss", tstart,
-            "-t", duration,
-            "-vn", "-ar", "44100",
-            "-f", "wav",
-            o2]
+    cmd = ["ffmpeg",
+           "-ss", tstart,          # start at tstart seconds
+           # "-t", duration,         # for duration seconds
+           "-i", f,                # input is f1
+           "-vn", "-ar", "44100",  # ignore video, audio rate is 44100
+           "-f", "wav",            # output format wav
+           o]                      # output filename
     print("extracting audio...")
-    subprocess.call(cmd1, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    subprocess.call(cmd2, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.call(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return o
 
 
-def convolution():
+def convolution(o1, o2):
     """Find the offset by convolving the two audio streams."""
     print("reading...")
     s1, fs, enc = wavread(o1)
@@ -107,16 +105,35 @@ def whistle_offset(fname):
     return time
 
 
-if __name__ == '__main__':
-    f1 = argv[1]
-    # f2 = argv[2]
-    # o1 = f1.split('.')[0] + '.wav'
-    # o2 = f2.split('.')[0] + '.wav'
+def cut_video(fname, tstart):
+    """Cut the given video to start at tstart."""
+    cmd = ["ffmpeg",
+           "-ss", str(tstart),     # start at tstart seconds
+           "-i", fname,            # input file *has to come after -ss!*
+           "-vcodec", "copy",      # don't reencode
+           "cut-" + fname]         # output filename
+    print("Cutting {video}".format(video=fname))
+    subprocess.call(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    # fft(argv[1])
-    print whistle_offset(f1)
-    # extract_audio()
-    # convolution()
-    # # clean up
-    # os.remove(o1)
-    # os.remove(o2)
+
+def main():
+    f1 = argv[1]
+    f2 = argv[2]
+    o1 = extract_audio(f1)
+    o2 = extract_audio(f2)
+    t_cam1 = whistle_offset(o1) - 1
+    t_cam2 = whistle_offset(o2) - 1
+    outs = "Whistle at {time} in {f}"
+    print outs.format(time=t_cam1, f=o1)
+    print outs.format(time=t_cam2, f=o2)
+
+    cut_video(f1, t_cam1)
+    cut_video(f2, t_cam2)
+
+    # cleanup
+    os.remove(o1)
+    os.remove(o2)
+
+
+if __name__ == '__main__':
+    main()
